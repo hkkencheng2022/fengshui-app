@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Compass } from './components/Compass';
 import { Grid } from './components/Grid';
 import { StarModal } from './components/StarModal';
@@ -47,17 +47,8 @@ const App: React.FC = () => {
     setCompass(prev => ({ ...prev, heading }));
   };
 
-  const toggleCompassMode = () => {
-    setCompass(prev => {
-        // If switching TO manual, stop listening
-        if (!prev.isManual) {
-             window.removeEventListener('deviceorientation', handleDeviceOrientation);
-        }
-        return { ...prev, isManual: !prev.isManual };
-    });
-  };
-
-  const handleDeviceOrientation = (event: DeviceOrientationEvent) => {
+  // Define handler with useCallback to ensure stable reference for add/removeEventListener
+  const handleDeviceOrientation = useCallback((event: DeviceOrientationEvent) => {
     const iosEvent = event as DeviceOrientationEventiOS;
     if (iosEvent.webkitCompassHeading) {
       // iOS
@@ -66,6 +57,16 @@ const App: React.FC = () => {
       // Android
       setCompass(prev => ({ ...prev, heading: 360 - (event.alpha || 0) }));
     }
+  }, []);
+
+  const toggleCompassMode = () => {
+    setCompass(prev => {
+        // If switching TO manual, stop listening
+        if (!prev.isManual) {
+             window.removeEventListener('deviceorientation', handleDeviceOrientation);
+        }
+        return { ...prev, isManual: !prev.isManual };
+    });
   };
 
   const requestCompassPermission = async () => {
@@ -125,7 +126,7 @@ const App: React.FC = () => {
     return () => {
       window.removeEventListener('deviceorientation', handleDeviceOrientation);
     };
-  }, []);
+  }, [handleDeviceOrientation]);
 
   return (
     <div className="min-h-screen pb-24 bg-gray-50/50">
