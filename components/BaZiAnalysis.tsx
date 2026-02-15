@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { callDeepSeek, callGemini } from '../utils/ai';
 import { BaZiAnalysisResult, AIModel, SavedBaZiCase } from '../types';
-import { BrainCircuit, Sparkles, AlertTriangle, ArrowRight, Settings, Loader2, MapPin, CalendarClock, Save, Trash2, FolderOpen, History, FileText } from 'lucide-react';
+import { BrainCircuit, Sparkles, AlertTriangle, ArrowRight, Settings, Loader2, MapPin, CalendarClock, Save, Trash2, FolderOpen, History, FileText, CheckCircle2 } from 'lucide-react';
 
 const PRESET_REGIONS = [
   '香港', '澳門', '台北', '台中', '高雄', 
@@ -43,10 +43,23 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
 
   // Load API Key & Cases from local storage and Environment
   useEffect(() => {
-    // Check for Environment Variable for DeepSeek
-    if (process.env.DEEPSEEK_API_KEY) {
+    // Check for Environment Variable for DeepSeek (Vite standard or Process)
+    // We check VITE_DEEPSEEK_API_KEY first as that is best practice for Netlify
+    let envKey = '';
+    
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEEPSEEK_API_KEY) {
+       // @ts-ignore
+       envKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
+    } else if (process.env.DEEPSEEK_API_KEY) {
+       envKey = process.env.DEEPSEEK_API_KEY;
+    } else if (process.env.VITE_DEEPSEEK_API_KEY) {
+       envKey = process.env.VITE_DEEPSEEK_API_KEY;
+    }
+
+    if (envKey) {
       setHasEnvDeepSeekKey(true);
-      setApiKey(process.env.DEEPSEEK_API_KEY);
+      setApiKey(envKey);
     } else {
       const savedKey = localStorage.getItem('deepseek_key');
       if (savedKey) setApiKey(savedKey);
@@ -131,7 +144,8 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
     }
     
     // Check key requirements
-    if (model === 'deepseek' && !apiKey && !process.env.DEEPSEEK_API_KEY) {
+    // If using deepseek and NO env key and NO user key
+    if (model === 'deepseek' && !hasEnvDeepSeekKey && !apiKey) {
       setError("請輸入 DeepSeek API Key");
       setShowSettings(true);
       return;
@@ -212,9 +226,13 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
             {model === 'deepseek' && (
               <div>
                 {hasEnvDeepSeekKey ? (
-                   <p className="text-xs text-green-600 flex items-center gap-1">
-                      <Settings className="w-3 h-3" /> 使用環境變數內建 API Key
-                   </p>
+                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      <div>
+                        <p className="text-xs font-bold text-green-800">已透過環境變數設定 (Secure)</p>
+                        <p className="text-[10px] text-green-600">系統已讀取 VITE_DEEPSEEK_API_KEY</p>
+                      </div>
+                   </div>
                 ) : (
                   <>
                     <label className="block text-xs font-bold text-gray-500 mb-1">DeepSeek API Key</label>
@@ -225,7 +243,9 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
                       placeholder="sk-..."
                       className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     />
-                    <p className="text-[10px] text-gray-400 mt-1">Key 僅儲存於您的瀏覽器中。</p>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                       建議於 Netlify 設定環境變數 <code>VITE_DEEPSEEK_API_KEY</code> 以確保安全。
+                    </p>
                   </>
                 )}
               </div>
