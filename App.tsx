@@ -18,12 +18,21 @@ interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'fengshui' | 'bazi'>('fengshui');
   const [year, setYear] = useState(new Date().getFullYear());
+  
+  // compass.heading now stores the RAW value (from sensor or manual slider)
   const [compass, setCompass] = useState<CompassState>({ heading: 180, isManual: true });
+  // calibration stores the user-defined offset to fix sensor deviation
+  const [calibration, setCalibration] = useState(0);
+  
   const [selectedCell, setSelectedCell] = useState<{ star: number, dir: DirectionId } | null>(null);
   const [alignCompass, setAlignCompass] = useState(false);
   const [savedRecords, setSavedRecords] = useState<SavedRecord[]>([]);
   
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Calculate the Final Effective Heading
+  // formula: (Raw + Calibration + 360) % 360
+  const effectiveHeading = (compass.heading + calibration + 360) % 360;
 
   // Load records from local storage on mount
   useEffect(() => {
@@ -50,13 +59,17 @@ const App: React.FC = () => {
   // Define handler with useCallback to ensure stable reference for add/removeEventListener
   const handleDeviceOrientation = useCallback((event: DeviceOrientationEvent) => {
     const iosEvent = event as DeviceOrientationEventiOS;
+    let rawHeading = 0;
+    
     if (iosEvent.webkitCompassHeading) {
-      // iOS
-      setCompass(prev => ({ ...prev, heading: iosEvent.webkitCompassHeading || 0 }));
+      // iOS usually provides magnetic north
+      rawHeading = iosEvent.webkitCompassHeading;
     } else if (event.alpha) {
-      // Android
-      setCompass(prev => ({ ...prev, heading: 360 - (event.alpha || 0) }));
+      // Android alpha is widely variable (sometimes relative to start, sometimes true north)
+      rawHeading = 360 - event.alpha;
     }
+
+    setCompass(prev => ({ ...prev, heading: rawHeading || 0 }));
   }, []);
 
   const toggleCompassMode = () => {
@@ -64,6 +77,8 @@ const App: React.FC = () => {
         // If switching TO manual, stop listening
         if (!prev.isManual) {
              window.removeEventListener('deviceorientation', handleDeviceOrientation);
+             // When switching to manual, reset calibration as user sets angle directly
+             setCalibration(0);
         }
         return { ...prev, isManual: !prev.isManual };
     });
@@ -91,11 +106,11 @@ const App: React.FC = () => {
 
   // Record Management
   const handleSaveRecord = () => {
-    const mountainInfo = getMountainInfo(compass.heading);
+    const mountainInfo = getMountainInfo(effectiveHeading);
     const newRecord: SavedRecord = {
       id: Date.now().toString(),
       year: year,
-      heading: compass.heading,
+      heading: effectiveHeading,
       name: mountainInfo.name,
       sitting: mountainInfo.sitting,
       timestamp: Date.now()
@@ -116,6 +131,7 @@ const App: React.FC = () => {
   const handleLoadRecord = (record: SavedRecord) => {
     setYear(record.year);
     setCompass({ heading: record.heading, isManual: true }); // Switch to manual to hold the angle
+    setCalibration(0); // Reset calibration on load
     // Stop listening to sensors if we were in auto mode
     window.removeEventListener('deviceorientation', handleDeviceOrientation);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -143,7 +159,7 @@ const App: React.FC = () => {
             <PDFGenerator 
               gridRef={gridRef} 
               year={year} 
-              heading={compass.heading} 
+              heading={effectiveHeading} 
               alignCompass={alignCompass}
             />
           )}
@@ -182,11 +198,13 @@ const App: React.FC = () => {
 
             {/* Compass Section */}
             <Compass 
-              heading={compass.heading}
+              heading={effectiveHeading}
               isManual={compass.isManual}
               onHeadingChange={handleHeadingChange}
               onToggleMode={toggleCompassMode}
               onRequestPermission={requestCompassPermission}
+              calibration={calibration}
+              onCalibrationChange={setCalibration}
             />
 
             {/* Save & Grid Controls */}
@@ -220,7 +238,7 @@ const App: React.FC = () => {
             <Grid 
               gridRef={gridRef}
               year={year} 
-              heading={compass.heading}
+              heading={effectiveHeading}
               alignCompass={alignCompass}
               onCellClick={(star, dir) => setSelectedCell({ star, dir })}
             />
