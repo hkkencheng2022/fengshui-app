@@ -1,0 +1,7 @@
+{
+  "name": "九宮飛星風水助手",
+  "description": "即時測量房屋座向，自動計算當年九宮飛星，提供專業風水佈局建議。",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
