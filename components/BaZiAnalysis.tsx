@@ -283,11 +283,11 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
           </div>
         )}
 
-        {/* Inputs */}
-        <div className="space-y-4">
+        {/* --- Input Form Section --- */}
+        <div className="space-y-5">
             {/* Case Name Input (Optional) */}
             <div>
-               <label className="block text-xs font-bold text-gray-500 mb-1">命主姓名/備註 (用於儲存)</label>
+               <label className="block text-xs font-bold text-gray-500 mb-1.5">命主姓名/備註</label>
                <input 
                  type="text" 
                  value={caseName}
@@ -297,89 +297,97 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
                />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-xs font-bold text-gray-500 mb-1">出生日期 (年 / 月 / 日)</label>
-                    <div className="flex gap-2">
+            {/* Date Inputs - Full Width Layout for better usability */}
+            <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1.5">出生日期 (新曆)</label>
+                <div className="grid grid-cols-4 gap-3">
+                    <div className="col-span-2 relative">
                         <input 
                             type="number" 
+                            inputMode="numeric"
                             value={inputYear}
                             onChange={(e) => setInputYear(e.target.value)}
-                            placeholder="年(YYYY)"
-                            min="1900"
-                            max="2100"
-                            className="flex-[2] p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                            placeholder="YYYY"
+                            className="w-full p-3 pr-8 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
                         />
-                         <input 
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold pointer-events-none">年</span>
+                    </div>
+                    <div className="col-span-1 relative">
+                        <input 
                             type="number" 
+                            inputMode="numeric"
                             value={inputMonth}
                             onChange={(e) => setInputMonth(e.target.value)}
-                            placeholder="月"
-                            min="1"
-                            max="12"
-                            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                            placeholder="MM"
+                            className="w-full p-3 pr-6 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
                         />
-                         <input 
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold pointer-events-none">月</span>
+                    </div>
+                    <div className="col-span-1 relative">
+                        <input 
                             type="number" 
+                            inputMode="numeric"
                             value={inputDay}
                             onChange={(e) => setInputDay(e.target.value)}
-                            placeholder="日"
-                            min="1"
-                            max="31"
-                            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                            placeholder="DD"
+                            className="w-full p-3 pr-6 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
                         />
+                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold pointer-events-none">日</span>
                     </div>
-                </div>
-                <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-xs font-bold text-gray-500 mb-1">出生時間</label>
-                    <input 
-                    type="time" 
-                    value={birthTime}
-                    onChange={(e) => setBirthTime(e.target.value)}
-                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
                 </div>
             </div>
 
-            <div className="mb-4">
-                <label className="block text-xs font-bold text-gray-500 mb-1">出生地點 (用於真太陽時校正)</label>
-                <div className="relative">
+            {/* Time & Location - Responsive Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1.5">出生時間</label>
                     <input 
-                    type="text" 
-                    list="region-options"
-                    value={birthRegion}
-                    onChange={(e) => setBirthRegion(e.target.value)}
-                    placeholder="請輸入或選擇城市"
-                    className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        type="time" 
+                        value={birthTime}
+                        onChange={(e) => setBirthTime(e.target.value)}
+                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
-                    <datalist id="region-options">
-                        {PRESET_REGIONS.map(city => (
-                            <option key={city} value={city} />
-                        ))}
-                    </datalist>
-                    <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                </div>
+                <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1.5">出生地點 (真太陽時校正)</label>
+                    <div className="relative">
+                        <input 
+                            type="text" 
+                            list="region-options"
+                            value={birthRegion}
+                            onChange={(e) => setBirthRegion(e.target.value)}
+                            placeholder="城市名稱"
+                            className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
+                        />
+                        <datalist id="region-options">
+                            {PRESET_REGIONS.map(city => (
+                                <option key={city} value={city} />
+                            ))}
+                        </datalist>
+                        <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    </div>
                 </div>
             </div>
             
-            <div className="flex justify-between items-center">
+            {/* Gender & Save Button Row */}
+            <div className="flex justify-between items-center pt-2">
                 <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition">
                         <input type="radio" name="gender" value="男" checked={gender === '男'} onChange={(e) => setGender(e.target.value)} className="accent-indigo-600" />
-                        <span className="text-sm font-medium">男</span>
+                        <span className="text-sm font-bold text-gray-700">男</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition">
                         <input type="radio" name="gender" value="女" checked={gender === '女'} onChange={(e) => setGender(e.target.value)} className="accent-indigo-600" />
-                        <span className="text-sm font-medium">女</span>
+                        <span className="text-sm font-bold text-gray-700">女</span>
                     </label>
                 </div>
                 
-                {/* Save Button */}
                 <button 
                     onClick={handleSaveCase}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition shadow-sm"
                 >
-                    <Save className="w-3.5 h-3.5" />
-                    {result ? '儲存分析結果' : '儲存命盤'}
+                    <Save className="w-4 h-4" />
+                    {result ? '儲存結果' : '儲存命盤'}
                 </button>
             </div>
         </div>
