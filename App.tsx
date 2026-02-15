@@ -129,8 +129,8 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-24 bg-gray-50/50">
-      {/* Header */}
-      <header className="bg-indigo-900 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-20">
+      {/* Header - Z-Index 50 to cover Compass Red Line */}
+      <header className="bg-indigo-900 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-50">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold tracking-wide text-yellow-400">
@@ -154,7 +154,8 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 pt-6 space-y-6">
+      {/* Main Content - Increased padding top to pt-10 */}
+      <main className="max-w-md mx-auto px-4 pt-10 space-y-6">
         
         {activeTab === 'fengshui' ? (
           <>

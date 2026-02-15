@@ -145,6 +145,19 @@ export const DIRECTION_NAMES: Record<DirectionId, string> = {
   'C': '中宮'
 };
 
+// Bagua Trigrams Mapping
+export const DIRECTION_TRIGRAMS: Record<DirectionId, string> = {
+  'N': '坎',
+  'NE': '艮',
+  'E': '震',
+  'SE': '巽',
+  'S': '離',
+  'SW': '坤',
+  'W': '兌',
+  'NW': '乾',
+  'C': '中'
+};
+
 // 24 Mountains Data
 // Note: Lo Pan 24 Mountains order (Clockwise from North)
 // North: Ren (337.5-352.5), Zi (352.5-7.5), Gui (7.5-22.5)
@@ -174,6 +187,7 @@ export const MOUNTAINS: MountainInfo[] = RAW_MOUNTAINS.map(([name, dir, angle], 
     start,
     end,
     direction: dir as DirectionId,
-    sitting: sitting as string
+    sitting: sitting as string,
+    trigram: DIRECTION_TRIGRAMS[dir as DirectionId] // Add Trigram data
   };
 });

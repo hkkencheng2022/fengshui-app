@@ -38,6 +38,7 @@ export interface MountainInfo {
   end: number;       // End angle
   direction: DirectionId;
   sitting: string;   // Opposite mountain name
+  trigram: string;   // e.g. '坎'
 }
 
 // Tai Sui Related Types
