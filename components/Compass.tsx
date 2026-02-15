@@ -1,7 +1,7 @@
 import React from 'react';
-import { RotateCw, Lock } from 'lucide-react';
+import { RotateCw, Lock, SlidersHorizontal } from 'lucide-react';
 import { getMountainInfo } from '../utils/fengshui';
-import { MOUNTAINS, DIRECTION_TRIGRAMS } from '../constants';
+import { MOUNTAINS, DIRECTION_TRIGRAMS, DIRECTION_NAMES } from '../constants';
 
 interface CompassProps {
   heading: number;
@@ -9,6 +9,8 @@ interface CompassProps {
   onHeadingChange: (heading: number) => void;
   onToggleMode: () => void;
   onRequestPermission?: () => void;
+  calibration?: number;
+  onCalibrationChange?: (val: number) => void;
 }
 
 export const Compass: React.FC<CompassProps> = ({
@@ -16,7 +18,9 @@ export const Compass: React.FC<CompassProps> = ({
   isManual,
   onHeadingChange,
   onToggleMode,
-  onRequestPermission
+  onRequestPermission,
+  calibration = 0,
+  onCalibrationChange
 }) => {
   
   const mountainInfo = getMountainInfo(heading);
@@ -227,22 +231,31 @@ export const Compass: React.FC<CompassProps> = ({
           </div>
         </div>
 
-        {/* Info Display (Current Reading) */}
-        <div className="text-center mb-6 p-4 bg-orange-50 rounded-xl w-full border border-orange-100 flex justify-between items-center shadow-sm">
-            <div className="text-left">
-              <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">度數 (Degree)</div>
-              <div className="text-3xl font-bold text-gray-900 font-serif">
-                {Math.round(heading).toString().padStart(3, '0')}°
-              </div>
+        {/* Info Display (Current Reading) - Enhanced for Calibration Check */}
+        <div className="text-center mb-6 bg-orange-50 rounded-xl w-full border border-orange-100 shadow-sm overflow-hidden">
+            {/* Top Row: Clear Directions */}
+            <div className="grid grid-cols-2 divide-x divide-orange-100 border-b border-orange-100">
+               <div className="p-3">
+                  <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">方位 (Direction)</div>
+                  <div className="text-lg font-bold text-gray-800">
+                     {DIRECTION_NAMES[mountainInfo.direction]} <span className="text-base text-gray-400 font-normal">({mountainInfo.direction})</span>
+                  </div>
+               </div>
+               <div className="p-3">
+                  <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">度數 (Degree)</div>
+                  <div className="text-xl font-bold text-indigo-900 font-mono">
+                     {heading.toFixed(1)}°
+                  </div>
+               </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-gray-800 font-serif flex items-baseline justify-end gap-2">
-                 <span className="text-lg text-orange-800 bg-orange-100 px-2 rounded border border-orange-200">{mountainInfo.trigram}卦</span>
-                 <span>{mountainInfo.name}<span className="text-sm text-gray-500 font-sans ml-1">山</span></span>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                 {mountainInfo.direction}方 (坐{mountainInfo.sitting}向{mountainInfo.name})
-              </div>
+
+            {/* Bottom Row: Traditional Feng Shui Info */}
+            <div className="p-3 bg-white/50 flex justify-between items-center px-6">
+                <span className="text-sm font-bold text-gray-500">二十四山:</span>
+                <div className="text-xl font-bold text-gray-800 font-serif flex items-baseline gap-2">
+                   <span className="text-base text-orange-800 bg-orange-100 px-2 rounded border border-orange-200">{mountainInfo.trigram}卦</span>
+                   <span>{mountainInfo.name}<span className="text-sm text-gray-500 font-sans ml-1">山</span></span>
+                </div>
             </div>
         </div>
 
@@ -284,8 +297,7 @@ export const Compass: React.FC<CompassProps> = ({
               {/* Fine Tuning Slider */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide flex justify-between">
-                   <span>旋轉羅盤 (微調)</span>
-                   <span>{heading.toFixed(1)}°</span>
+                   <span>旋轉羅盤 (手動設定)</span>
                 </label>
                 <input
                   type="range"
@@ -297,18 +309,39 @@ export const Compass: React.FC<CompassProps> = ({
                   className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
               </div>
-              <p className="text-[10px] text-gray-400 text-center">
-                * 左右滑動調整角度，以對齊家中實際方位
-              </p>
             </div>
           ) : (
-             <button
-             onClick={onRequestPermission}
-             className="w-full py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition flex justify-center items-center gap-2"
-           >
-             <RotateCw className="w-4 h-4" />
-             校準/啟動指南針 (iOS需點擊)
-           </button>
+            <div className="space-y-3">
+               <button
+                  onClick={onRequestPermission}
+                  className="w-full py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition flex justify-center items-center gap-2"
+                >
+                  <RotateCw className="w-4 h-4" />
+                  校準/啟動指南針 (iOS需點擊)
+                </button>
+                
+                {/* Calibration Slider for Auto Mode */}
+                {onCalibrationChange && (
+                  <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 mt-2">
+                    <label className="flex items-center justify-between text-xs font-bold text-gray-500 mb-2">
+                       <span className="flex items-center gap-1"><SlidersHorizontal className="w-3 h-3" /> 系統偏差校準</span>
+                       <span className="bg-white px-1.5 py-0.5 rounded border border-gray-200">{calibration > 0 ? '+' : ''}{calibration}°</span>
+                    </label>
+                    <input
+                      type="range"
+                      min="-180"
+                      max="180"
+                      step="1"
+                      value={calibration}
+                      onChange={(e) => onCalibrationChange(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-500"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1.5 leading-tight">
+                       * 若網頁羅盤方位與系統內建指南針 App 差異過大（常見於 Android），請拖曳此桿修正偏差，直到兩者顯示一致。
+                    </p>
+                  </div>
+                )}
+            </div>
           )}
 
         </div>

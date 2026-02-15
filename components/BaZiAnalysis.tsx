@@ -18,6 +18,12 @@ interface BaZiAnalysisProps {
 export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
   // Input States
   const [birthDate, setBirthDate] = useState('');
+  
+  // Separate Numeric Inputs for better mobile experience
+  const [inputYear, setInputYear] = useState('');
+  const [inputMonth, setInputMonth] = useState('');
+  const [inputDay, setInputDay] = useState('');
+
   const [birthTime, setBirthTime] = useState('12:00');
   const [birthRegion, setBirthRegion] = useState('香港');
   const [gender, setGender] = useState('男');
@@ -40,6 +46,18 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
   useEffect(() => {
     setPredictionYear(selectedYear);
   }, [selectedYear]);
+
+  // Sync separate inputs to birthDate string whenever they change
+  useEffect(() => {
+    if (inputYear && inputMonth && inputDay) {
+      // Pad month and day with 0 if needed
+      const m = inputMonth.padStart(2, '0');
+      const d = inputDay.padStart(2, '0');
+      setBirthDate(`${inputYear}-${m}-${d}`);
+    } else {
+      setBirthDate('');
+    }
+  }, [inputYear, inputMonth, inputDay]);
 
   // Load API Key & Cases from local storage and Environment
   useEffect(() => {
@@ -114,7 +132,13 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
   };
 
   const handleLoadCase = (c: SavedBaZiCase) => {
-      setBirthDate(c.date);
+      // Split saved date string (YYYY-MM-DD) back to inputs
+      if (c.date) {
+        const [y, m, d] = c.date.split('-');
+        setInputYear(y);
+        setInputMonth(parseInt(m).toString()); // remove leading 0
+        setInputDay(parseInt(d).toString());   // remove leading 0
+      }
       setBirthTime(c.time);
       setGender(c.gender);
       setBirthRegion(c.region);
@@ -135,7 +159,7 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
 
   const handleAnalyze = async () => {
     if (!birthDate) {
-      setError("請選擇出生日期");
+      setError("請完整輸入出生年、月、日");
       return;
     }
     if (!birthRegion) {
@@ -274,24 +298,47 @@ export const BaZiAnalysis: React.FC<BaZiAnalysisProps> = ({ selectedYear }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-            <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">出生日期</label>
-                <input 
-                type="date" 
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-            </div>
-            <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">出生時間</label>
-                <input 
-                type="time" 
-                value={birthTime}
-                onChange={(e) => setBirthTime(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-            </div>
+                <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-gray-500 mb-1">出生日期 (年 / 月 / 日)</label>
+                    <div className="flex gap-2">
+                        <input 
+                            type="number" 
+                            value={inputYear}
+                            onChange={(e) => setInputYear(e.target.value)}
+                            placeholder="年(YYYY)"
+                            min="1900"
+                            max="2100"
+                            className="flex-[2] p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                        />
+                         <input 
+                            type="number" 
+                            value={inputMonth}
+                            onChange={(e) => setInputMonth(e.target.value)}
+                            placeholder="月"
+                            min="1"
+                            max="12"
+                            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                        />
+                         <input 
+                            type="number" 
+                            value={inputDay}
+                            onChange={(e) => setInputDay(e.target.value)}
+                            placeholder="日"
+                            min="1"
+                            max="31"
+                            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-center focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+                        />
+                    </div>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-gray-500 mb-1">出生時間</label>
+                    <input 
+                    type="time" 
+                    value={birthTime}
+                    onChange={(e) => setBirthTime(e.target.value)}
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                </div>
             </div>
 
             <div className="mb-4">
