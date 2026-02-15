@@ -1,6 +1,27 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { BaZiAnalysisResult } from "../types";
 
+// Helper to get Env Key safely (supports Vite's import.meta.env and standard process.env)
+const getEnvKey = (key: string) => {
+  // Try Vite standard (import.meta.env)
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+      // @ts-ignore
+      return import.meta.env[key];
+    }
+  } catch (e) {}
+
+  // Try Node/Webpack standard (process.env)
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+  } catch (e) {}
+  
+  return "";
+};
+
 // Helper to construct the system prompt
 const getSystemPrompt = () => `
 你是一位精通「朱鵲橋大師（Master Chu Cheuk Kiu）」命理學派的八字專家。
@@ -87,8 +108,11 @@ export const callDeepSeek = async (
   region: string,
   selectedYear: number
 ): Promise<BaZiAnalysisResult> => {
-  const finalKey = apiKey || process.env.DEEPSEEK_API_KEY;
-  if (!finalKey) throw new Error("請輸入 DeepSeek API Key");
+  // Check for Env Var (VITE_DEEPSEEK_API_KEY or DEEPSEEK_API_KEY) if user input is empty
+  const envKey = getEnvKey('VITE_DEEPSEEK_API_KEY') || getEnvKey('DEEPSEEK_API_KEY');
+  const finalKey = apiKey || envKey;
+  
+  if (!finalKey) throw new Error("請設定 DeepSeek API Key (可於環境變數設定 VITE_DEEPSEEK_API_KEY)");
 
   const response = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
@@ -125,8 +149,9 @@ export const callGemini = async (
   region: string,
   selectedYear: number
 ): Promise<BaZiAnalysisResult> => {
-  // Initialize with env key (assumed available in build environment)
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Initialize with env key (supports VITE_API_KEY or API_KEY)
+  const envKey = getEnvKey('VITE_API_KEY') || getEnvKey('API_KEY') || process.env.API_KEY;
+  const ai = new GoogleGenAI({ apiKey: envKey || '' });
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
